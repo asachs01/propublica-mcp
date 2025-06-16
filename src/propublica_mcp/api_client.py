@@ -366,14 +366,14 @@ class ProPublicaClient:
         logger.info("Getting organization filings", ein=ein_clean, year=year)
         
         try:
-            data = await self._make_request(f"/organizations/{ein_clean}/filings.json")
+            data = await self._make_request(f"/organizations/{ein_clean}.json")
             
-            if not data.get('filings'):
+            if not data.get('filings_with_data'):
                 logger.warning("No filings found", ein=ein_clean)
                 return []
             
             filings = []
-            for filing_data in data['filings']:
+            for filing_data in data['filings_with_data']:
                 try:
                     filing_data['ein'] = ein_clean
                     filing = self._parse_filing(filing_data)
