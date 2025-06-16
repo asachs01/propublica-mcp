@@ -214,14 +214,27 @@ class ProPublicaClient:
                 except (ValueError, TypeError):
                     filing_data['tax_year'] = None
             
-            # Handle form type
+            # Handle form type - convert from API's integer codes to strings
             if 'formtype' in filing_data:
-                filing_data['form_type'] = filing_data.pop('formtype')
+                form_type_code = filing_data.pop('formtype')
+                filing_data['form_type'] = self._convert_form_type(form_type_code)
+            elif 'form_type' in filing_data and isinstance(filing_data['form_type'], int):
+                filing_data['form_type'] = self._convert_form_type(filing_data['form_type'])
             
             return Filing(**filing_data)
         except ValidationError as e:
             logger.error("Failed to parse filing data", error=str(e), data=filing_data)
             raise ProPublicaAPIError(f"Invalid filing data: {e}")
+    
+    def _convert_form_type(self, form_type_code) -> Optional[str]:
+        """Convert ProPublica's form type codes to string names."""
+        form_type_map = {
+            0: "990",      # Form 990 
+            1: "990EZ",    # Form 990-EZ
+            2: "990PF",    # Form 990-PF (Private Foundation)
+            3: "990T",     # Form 990-T (Unrelated Business Income Tax)
+        }
+        return form_type_map.get(form_type_code, "990")  # Default to 990
     
     async def search_organizations(
         self,
