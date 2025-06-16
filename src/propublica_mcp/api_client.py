@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 import httpx
 import structlog
+import sys
 from pydantic import ValidationError
 
 from .models import (
@@ -17,6 +18,19 @@ from .models import (
     US_STATES,
     NTEE_CATEGORIES,
     SUBSECTION_CODES
+)
+
+# Configure structlog to use stderr
+structlog.configure(
+    processors=[
+        structlog.processors.add_log_level,
+        structlog.processors.StackInfoRenderer(),
+        structlog.dev.set_exc_info,
+        structlog.processors.JSONRenderer()
+    ],
+    wrapper_class=structlog.make_filtering_bound_logger(30),  # INFO level
+    logger_factory=structlog.WriteLoggerFactory(file=sys.stderr),
+    cache_logger_on_first_use=True,
 )
 
 logger = structlog.get_logger(__name__)

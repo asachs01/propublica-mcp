@@ -29,8 +29,13 @@ from .models import (
     US_STATES
 )
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to go to stderr (not stdout) for MCP compatibility
+import sys
+logging.basicConfig(
+    level=logging.INFO,
+    stream=sys.stderr,  # Ensure logs go to stderr, not stdout
+    format='%(asctime)s [%(levelname)-8s] %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # Initialize FastMCP server

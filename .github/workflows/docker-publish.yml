@@ -23,6 +23,8 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      security-events: write  # Required for uploading SARIF results
+      actions: read           # Required for some security scanning features
 
     steps:
       - name: Checkout repository
@@ -87,6 +89,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
+        continue-on-error: true  # Don't fail the build if SARIF upload fails
 
   test-docker-image:
     runs-on: ubuntu-latest
