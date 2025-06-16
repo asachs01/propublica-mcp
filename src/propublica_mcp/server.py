@@ -473,6 +473,46 @@ async def search_similar_nonprofits(
 
 
 @mcp.tool()
+async def search_nonprofits_with_pdfs(
+    query: str,
+    limit: int = 10
+) -> str:
+    """
+    Search for nonprofit organizations that have PDF Form 990 filings available.
+    
+    Args:
+        query: Search term (organization name, keywords, etc.)
+        limit: Maximum number of organizations to return (default: 10)
+    
+    Returns:
+        JSON string with organizations that have PDF filings available
+    """
+    try:
+        # Use the client for the PDF search method
+        organizations = await api_client.get_organizations_with_pdfs(query, limit)
+        
+        response = {
+            "search_query": query,
+            "pdf_organizations_found": len(organizations),
+            "organizations": organizations,
+            "search_criteria": {
+                "have_pdfs": True,
+                "pdf_url_required": True
+            },
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return json.dumps(response, indent=2)
+        
+    except Exception as e:
+        logger.error(f"Error searching nonprofits with PDFs: {e}")
+        return json.dumps({
+            "error": f"PDF search failed: {str(e)}",
+            "error_type": type(e).__name__
+        })
+
+
+@mcp.tool()
 async def export_nonprofit_data(
     eins: List[str],
     format: str = "json",

@@ -80,7 +80,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: 'sarif'
           output: 'trivy-results.sarif'
 
@@ -116,16 +116,16 @@ jobs:
       - name: Test Docker image
         run: |
           # Pull the image
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          docker pull ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           
           # Test basic functionality
           docker run --rm \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} \
+            ${{ fromJSON(steps.meta.outputs.json).tags[0] }} \
             python -c "from propublica_mcp.server import search_nonprofits; print('Import successful')"
           
           # Test the CLI help
           docker run --rm \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} \
+            ${{ fromJSON(steps.meta.outputs.json).tags[0] }} \
             python -m propublica_mcp.server --help
 
       - name: Test with docker-compose
@@ -135,7 +135,7 @@ jobs:
           version: '3.8'
           services:
             propublica-mcp:
-              image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+              image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
               command: python -c "import propublica_mcp.server; print('Docker Compose test successful')"
           EOF
           

@@ -236,6 +236,11 @@ class ProPublicaClient:
         }
         return form_type_map.get(form_type_code, "990")  # Default to 990
     
+    def _has_valid_pdf(self, filing_data: Dict[str, Any]) -> bool:
+        """Check if filing has a valid PDF URL."""
+        pdf_url = filing_data.get('pdf_url')
+        return pdf_url is not None and isinstance(pdf_url, str) and pdf_url.strip() != ""
+    
     async def search_organizations(
         self,
         query: Optional[str] = None,
@@ -463,4 +468,56 @@ class ProPublicaClient:
         
         except Exception as e:
             logger.error("Failed to get organization summary", ein=ein, error=str(e))
-            raise 
+            raise
+    
+    async def get_organizations_with_pdfs(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Search for organizations that have PDF filings available.
+        
+        Args:
+            query: Search query string
+            limit: Maximum number of organizations to return
+        
+        Returns:
+            List of dictionaries with organization info and PDF availability
+        """
+        logger.info("Searching for organizations with PDFs", query=query, limit=limit)
+        
+        # Search for organizations
+        search_result = await self.search_organizations(query=query)
+        
+        organizations_with_pdfs = []
+        
+        for org in search_result.organizations[:limit * 2]:  # Get more to filter down
+            try:
+                # Get detailed organization data to check for PDFs
+                data = await self._make_request(f"/organizations/{org.ein}.json")
+                
+                filings_with_pdfs = []
+                if data.get('filings_with_data'):
+                    for filing in data['filings_with_data']:
+                        if self._has_valid_pdf(filing):
+                            filings_with_pdfs.append({
+                                'tax_year': filing.get('tax_prd_yr'),
+                                'pdf_url': filing.get('pdf_url'),
+                                'form_type': self._convert_form_type(filing.get('formtype', 0))
+                            })
+                
+                if filings_with_pdfs:  # Only include orgs with actual PDFs
+                    org_info = {
+                        'organization': org.dict(),
+                        'pdf_filings_count': len(filings_with_pdfs),
+                        'recent_pdfs': filings_with_pdfs[:3],  # Most recent 3
+                        'have_pdfs': True
+                    }
+                    organizations_with_pdfs.append(org_info)
+                    
+                    if len(organizations_with_pdfs) >= limit:
+                        break
+            
+            except Exception as e:
+                logger.warning("Failed to check PDFs for organization", ein=org.ein, error=str(e))
+                continue
+        
+        logger.info("Found organizations with PDFs", count=len(organizations_with_pdfs))
+        return organizations_with_pdfs 
