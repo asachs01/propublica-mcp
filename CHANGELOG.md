@@ -16,6 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A
 
+## [0.1.2] - 2025-06-16
+
+### Added
+- New `search_nonprofits_with_pdfs` MCP tool for finding organizations with PDF filings
+- `_has_valid_pdf()` helper method to validate PDF URL availability
+- `get_organizations_with_pdfs()` method for PDF-specific organization searches
+- Enhanced filtering to ensure both `have_pdfs=true` AND valid `pdf_url` fields
+
+### Fixed
+- Docker workflow "manifest unknown" error by correcting tag references in GitHub Actions
+- Trivy security scan image reference issues
+- Docker image testing and publishing pipeline reliability
+
 ## [0.1.1] - 2025-06-16
 
 ### Fixed
