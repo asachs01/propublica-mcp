@@ -16,6 +16,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A
 
+## [0.2.0] - 2025-06-16
+
+### Added
+- HTTP/SSE server support for cloud deployment compatibility
+- Auto-detection of cloud deployment environments (PORT, DO_APP_URL, etc.)
+- Health check endpoints (`/health` and `/`) for cloud platform monitoring
+- Starlette and Uvicorn dependencies for HTTP server functionality
+- Support for both stdio (local MCP usage) and HTTP/SSE (cloud deployment) modes
+- DigitalOcean App Platform deployment configuration with PORT environment variable
+
+### Changed
+- Server automatically switches between stdio and HTTP modes based on environment
+- Enhanced deployment template for DigitalOcean with proper cloud configuration
+- Moved integration tests to proper `/tests/` directory for better organization
+- Updated import paths in test files for correct module resolution
+
+### Fixed
+- DigitalOcean deployment template source conflict (git vs github configuration)
+- Docker LABEL parsing error caused by unescaped apostrophe in description
+- Docker build failures on cloud platforms due to invalid LABEL syntax
+- Project structure cleanup by removing accidentally committed virtual environment
+
 ## [0.1.6] - 2025-06-16
 
 ### Added
