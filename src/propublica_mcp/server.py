@@ -786,16 +786,91 @@ def _get_revenue_similarity(revenue1: Optional[int], revenue2: Optional[int]) ->
 def main():
     """Main function to run the ProPublica MCP server."""
     import argparse
+    import os
     
     parser = argparse.ArgumentParser(description="ProPublica Nonprofit Explorer MCP Server")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
+    parser.add_argument("--http", action="store_true", help="Run HTTP/SSE server instead of stdio")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind HTTP server to")
+    parser.add_argument("--port", type=int, default=8080, help="Port to bind HTTP server to")
     args = parser.parse_args()
     
     # Set log level
     logging.getLogger().setLevel(getattr(logging, args.log_level))
     
-    # Run the server
-    mcp.run()
+    # Auto-detect HTTP mode for cloud deployment
+    # Check for common cloud deployment environment variables
+    cloud_deployment = any([
+        os.getenv("PORT"),  # Common cloud port env var
+        os.getenv("DO_APP_URL"),  # DigitalOcean specific
+        os.getenv("RAILWAY_PUBLIC_DOMAIN"),  # Railway
+        os.getenv("RENDER_EXTERNAL_URL"),  # Render
+        os.getenv("CF_PAGES_URL"),  # Cloudflare Pages/Workers
+        args.http  # Explicit flag
+    ])
+    
+    if cloud_deployment:
+        # Run HTTP/SSE server for cloud deployment
+        logger.info("Starting ProPublica MCP server in HTTP/SSE mode")
+        
+        # Use PORT environment variable if available (common for cloud platforms)
+        port = int(os.getenv("PORT", args.port))
+        host = "0.0.0.0" if cloud_deployment else args.host  # Bind to all interfaces in cloud
+        
+        try:
+            from mcp.server.sse import SseServerTransport
+            from starlette.applications import Starlette
+            from starlette.routing import Route
+            from starlette.responses import JSONResponse
+            import uvicorn
+            
+            logger.info(f"HTTP/SSE server will bind to {host}:{port}")
+            
+            # Create SSE transport
+            sse = SseServerTransport("/messages")
+            
+            async def handle_sse(scope, receive, send):
+                """Handle SSE connections"""
+                try:
+                    async with sse.connect_sse(scope, receive, send) as streams:
+                        await mcp.run_server(streams[0], streams[1])
+                except Exception as e:
+                    logger.error(f"SSE connection error: {e}")
+            
+            async def handle_messages(scope, receive, send):
+                """Handle POST messages"""
+                try:
+                    await sse.handle_post_message(scope, receive, send)
+                except Exception as e:
+                    logger.error(f"Message handling error: {e}")
+            
+            async def health_check(scope, receive, send):
+                """Health check endpoint for cloud platforms"""
+                response = JSONResponse({"status": "healthy", "server": "propublica-mcp"})
+                await response(scope, receive, send)
+            
+            # Create Starlette app
+            app = Starlette(
+                routes=[
+                    Route("/sse", endpoint=handle_sse),
+                    Route("/messages", endpoint=handle_messages, methods=["POST"]),
+                    Route("/health", endpoint=health_check),
+                    Route("/", endpoint=health_check),  # Root health check
+                ]
+            )
+            
+            # Run with uvicorn
+            uvicorn.run(app, host=host, port=port, log_level=args.log_level.lower())
+            
+        except ImportError as e:
+            logger.error(f"HTTP/SSE dependencies not available: {e}")
+            logger.error("Please install: pip install starlette uvicorn")
+            return 1
+        
+    else:
+        # Run stdio server for local MCP usage
+        logger.info("Starting ProPublica MCP server in stdio mode")
+        mcp.run()
 
 
 if __name__ == "__main__":

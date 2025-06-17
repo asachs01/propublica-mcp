@@ -1,11 +1,13 @@
+# Deploy from latest stable release tag (update for new releases)
+# Change branch to latest release tag (e.g., v0.2.1, v0.3.0, etc.)
 spec:
   name: propublica-mcp
   services:
   - name: propublica-mcp
     github:
       repo: asachs01/propublica-mcp
-      branch: main
-      deploy_on_push: true
+      branch: v0.2.0  # Update this to latest release tag
+      deploy_on_push: false  # Manual deployment only
     source_dir: /
     dockerfile_path: Dockerfile
     http_port: 8080

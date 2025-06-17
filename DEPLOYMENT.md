@@ -2,11 +2,13 @@
 
 This guide covers deploying the ProPublica MCP Server to various cloud platforms.
 
+> **🔒 Release-Only Deployment Strategy**: All deployment configurations target specific release tags rather than the main development branch. This ensures only stable, tested code reaches production. When new releases are published, deployment templates are updated to reference the latest stable version.
+
 ## 🚀 One-Click Deployments
 
 ### DigitalOcean App Platform
 
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/main)
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/v0.2.0)
 
 **Features:**
 - Container-based deployment using Dockerfile
@@ -26,7 +28,7 @@ The deployment uses the `.do/deploy.template.yaml` file which configures:
 
 ### Cloudflare Workers
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/asachs01/propublica-mcp)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/asachs01/propublica-mcp/tree/v0.2.0)
 
 **Features:**
 - Serverless deployment with global edge distribution
