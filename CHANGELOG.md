@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- N/A
+
+### Changed
+- N/A
+
+### Fixed
+- N/A
+
+## [0.1.6] - 2025-06-16
+
+### Added
 - New `get_most_recent_pdf` MCP tool that finds the most recent Form 990 PDF filing for an organization
 - New `get_most_recent_pdf_filing` method in API client that iterates through all filings to find the newest PDF
 - One-click deployment buttons for DigitalOcean App Platform and Cloudflare Workers
