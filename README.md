@@ -2,6 +2,14 @@
 
 A Model Context Protocol (MCP) server that provides access to ProPublica's Nonprofit Explorer API, enabling AI models to search and analyze nonprofit organizations' Form 990 data for CRM integration and prospect research.
 
+> **🚨 Breaking Changes in v1.0.0**
+> 
+> Version 1.0.0 introduces **breaking changes** with the implementation of MCP 2025-03-26 Streamable HTTP transport:
+> - **Remote deployments** now use a single `/` endpoint instead of `/sse` and `/messages`  
+> - **MCP client configuration** has changed for cloud deployments (see Usage section below)
+> - **Improved compatibility** with Claude Desktop, Cursor, and other MCP clients
+> - **Backwards incompatible** with MCP clients expecting the old SSE transport
+
 ## Features
 
 - Search nonprofit organizations by name, location, and category
@@ -112,31 +120,69 @@ pip install -e .
 ```
 
 5. Run the server:
+
+**For stdio mode (local MCP clients):**
 ```bash
 python -m propublica_mcp.server
 ```
 
-### Usage with Claude Desktop
+**For HTTP mode (remote MCP clients):**
+```bash
+python -m propublica_mcp.server --http --host 0.0.0.0 --port 8080
+```
 
-#### For Cloud Deployment:
-**DigitalOcean/Cloudflare (HTTP endpoint):**
+**Available options:**
+- `--http`: Enable HTTP server mode for remote MCP clients
+- `--host`: Host to bind to (default: 127.0.0.1)
+- `--port`: Port to bind to (default: 8080)
+- `--log-level`: Set logging level (DEBUG, INFO, WARNING, ERROR)
+
+### Usage with MCP Clients
+
+This server implements the **MCP 2025-03-26 Streamable HTTP** transport protocol and can be used with any MCP client, including Claude Desktop, Cursor, and other compatible tools.
+
+#### For Cloud Deployment (Remote MCP Server):
+**DigitalOcean/Cloudflare (Streamable HTTP):**
 ```json
 {
   "mcpServers": {
     "propublica-mcp": {
-      "command": "curl",
-      "args": [
-        "-X", "POST",
-        "-H", "Content-Type: application/json",
-        "https://your-deployed-url.com/mcp"
-      ],
-      "description": "ProPublica Nonprofit Explorer MCP Server (Cloud)"
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-everything", "https://your-deployed-url.com"],
+      "description": "ProPublica Nonprofit Explorer MCP Server (Remote)"
     }
   }
 }
 ```
 
-#### For Docker Deployment:
+**Alternative using uv (if installed):**
+```json
+{
+  "mcpServers": {
+    "propublica-mcp": {
+      "command": "uvx",
+      "args": ["mcp", "https://your-deployed-url.com"],
+      "description": "ProPublica Nonprofit Explorer MCP Server (Remote)"
+    }
+  }
+}
+```
+
+#### For Local Installation (stdio transport):
+```json
+{
+  "mcpServers": {
+    "propublica-mcp": {
+      "command": "python",
+      "args": ["-m", "propublica_mcp.server"],
+      "cwd": "/path/to/propublica-mcp",
+      "env": {}
+    }
+  }
+}
+```
+
+#### For Docker Deployment (stdio transport):
 ```json
 {
   "mcpServers": {
@@ -152,15 +198,20 @@ python -m propublica_mcp.server
 }
 ```
 
-#### For Local Installation:
+#### For Local HTTP Server (development):
+```bash
+# Start HTTP server locally
+python -m propublica_mcp.server --http --host 0.0.0.0 --port 8080
+```
+
+Then configure as remote server:
 ```json
 {
   "mcpServers": {
     "propublica-mcp": {
-      "command": "python",
-      "args": ["-m", "propublica_mcp.server"],
-      "cwd": "/path/to/propublica-mcp",
-      "env": {}
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-everything", "http://localhost:8080"],
+      "description": "ProPublica Nonprofit Explorer MCP Server (Local HTTP)"
     }
   }
 }

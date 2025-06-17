@@ -11,18 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2025-06-17
 
+### Changed
+- **BREAKING**: Implemented proper Streamable HTTP transport according to MCP 2025-03-26 specification
+- **BREAKING**: Server now uses single `/` endpoint for all MCP communication instead of separate `/sse` and `/messages`
+- **BREAKING**: HTTP transport now properly handles both GET and POST requests as per MCP specification
+- Tool responses now use correct MCP format with `content` array and `isError` flag
+
 ### Fixed
-- **Breaking**: Implemented proper Streamable HTTP transport according to MCP 2025-03-26 specification
-- Replaced deprecated SSE transport with compliant single-endpoint HTTP transport  
-- Fixed FastMCP integration for proper tool listing and calling
+- FastMCP integration for proper tool listing and calling
 - Improved JSON-RPC message handling and error responses
 - Enhanced session management and security validation
 - Updated health check endpoint with transport and version information
-
-### Changed
-- Server now uses single `/` endpoint for all MCP communication instead of separate `/sse` and `/messages`
-- HTTP transport now properly handles both GET and POST requests as per MCP specification
-- Tool responses now use correct MCP format with `content` array and `isError` flag
 
 ### Added
 - N/A
