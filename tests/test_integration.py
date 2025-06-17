@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 
 # Add the src directory to the path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from propublica_mcp.api_client import ProPublicaClient
 from propublica_mcp.server import (
@@ -188,7 +188,7 @@ async def test_get_most_recent_pdf_tool():
     
     try:
         # Import the tool function directly
-        from src.propublica_mcp.server import get_most_recent_pdf
+        from propublica_mcp.server import get_most_recent_pdf
         
         # Call the tool
         result = await get_most_recent_pdf(ein)
@@ -227,7 +227,7 @@ async def test_invalid_ein():
     print("-" * 30)
     
     try:
-        from src.propublica_mcp.server import get_most_recent_pdf
+        from propublica_mcp.server import get_most_recent_pdf
         
         result = await get_most_recent_pdf("invalid-ein")
         response = json.loads(result)
