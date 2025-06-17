@@ -1003,11 +1003,26 @@ def main():
                         # Call the tool using FastMCP
                         try:
                             result = await mcp.call_tool(tool_name, arguments)
+                            # result is a list of TextContent objects
+                            content = []
+                            for item in result:
+                                if hasattr(item, 'type') and hasattr(item, 'text'):
+                                    content.append({
+                                        "type": item.type,
+                                        "text": item.text
+                                    })
+                                else:
+                                    # Fallback for other content types
+                                    content.append({
+                                        "type": "text",
+                                        "text": str(item)
+                                    })
+                            
                             return {
                                 "jsonrpc": "2.0",
                                 "result": {
-                                    "content": result.content,
-                                    "isError": result.isError if hasattr(result, 'isError') else False
+                                    "content": content,
+                                    "isError": False
                                 },
                                 "id": msg_id
                             }
