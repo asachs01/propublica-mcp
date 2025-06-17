@@ -12,6 +12,9 @@ spec:
     instance_count: 1
     instance_size_slug: basic-xxs
     envs:
+    - key: PORT
+      value: "8080"
+      scope: RUN_TIME
     - key: LOG_LEVEL
       value: "INFO"
       scope: RUN_TIME
