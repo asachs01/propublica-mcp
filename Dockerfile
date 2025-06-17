@@ -37,7 +37,7 @@ LABEL org.opencontainers.image.title="ProPublica MCP Server" \
       org.opencontainers.image.revision=${VCS_REF} \
       org.opencontainers.image.vendor="ProPublica MCP" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.source="https://github.com/asachs/propublica-mcp"
+      org.opencontainers.image.source="https://github.com/asachs01/propublica-mcp"
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \

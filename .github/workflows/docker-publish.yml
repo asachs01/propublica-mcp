@@ -60,6 +60,7 @@ jobs:
             org.opencontainers.image.description=MCP server for accessing ProPublica Nonprofit Explorer API
             org.opencontainers.image.vendor=ProPublica MCP
             org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -76,6 +77,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Wait for image to be available
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "Waiting for image to be available in registry..."
+          sleep 10
+          
       - name: Run security scan
         if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
@@ -112,6 +119,11 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for image propagation
+        run: |
+          echo "Waiting for image to propagate in registry..."
+          sleep 15
 
       - name: Test Docker image
         run: |
