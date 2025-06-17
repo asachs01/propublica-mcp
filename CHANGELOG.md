@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A
 
+## [0.1.5] - 2025-06-16
+
+### Fixed
+- Docker tag mismatch in GitHub workflow where images were published without `v` prefix (e.g., `0.1.3`) but workflow was trying to reference them with `v` prefix (e.g., `v0.1.3`)
+- Updated all Docker tag references in workflow to strip `v` prefix for consistency with published image tags
+
 ## [0.1.4] - 2025-06-16
 
 ### Fixed
