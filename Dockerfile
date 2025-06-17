@@ -31,7 +31,7 @@ FROM python:3.11-slim as production
 
 # Set labels for metadata
 LABEL org.opencontainers.image.title="ProPublica MCP Server" \
-      org.opencontainers.image.description="MCP server providing access to ProPublica's Nonprofit Explorer API for Form 990 data, financial analysis, and nonprofit research. Includes tools for searching organizations, analyzing financials, and exporting data for CRM integration." \
+      org.opencontainers.image.description="MCP server providing access to ProPublica'\''s Nonprofit Explorer API for Form 990 data, financial analysis, and nonprofit research. Includes tools for searching organizations, analyzing financials, and exporting data for CRM integration." \
       org.opencontainers.image.version=${VERSION} \
       org.opencontainers.image.created=${BUILD_DATE} \
       org.opencontainers.image.revision=${VCS_REF} \
