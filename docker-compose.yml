@@ -7,7 +7,6 @@ services:
         BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
         VERSION: ${VERSION:-latest}
         VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
-    image: ghcr.io/asachs/propublica-mcp:${VERSION:-latest}
     container_name: propublica-mcp-server
     restart: unless-stopped
     
