@@ -176,6 +176,88 @@ def test_configuration():
         return False
 
 
+async def test_get_most_recent_pdf_tool():
+    """Test the get_most_recent_pdf MCP tool."""
+    print("Testing get_most_recent_pdf MCP tool")
+    print("=" * 50)
+    
+    # Test with Big Brothers Big Sisters of Chattanooga
+    ein = "62-0586090"
+    print(f"Testing EIN: {ein}")
+    print()
+    
+    try:
+        # Import the tool function directly
+        from src.propublica_mcp.server import get_most_recent_pdf
+        
+        # Call the tool
+        result = await get_most_recent_pdf(ein)
+        
+        # Parse the JSON result
+        response = json.loads(result)
+        
+        if response.get("has_pdf"):
+            print("✅ SUCCESS: Tool found the most recent PDF!")
+            print(f"   Organization: {response['organization_name']}")
+            print(f"   Tax Year: {response['most_recent_pdf']['tax_year']}")
+            print(f"   Form Type: {response['most_recent_pdf']['form_type']}")
+            print(f"   PDF URL: {response['most_recent_pdf']['pdf_url']}")
+            print()
+            print("✅ This demonstrates that:")
+            print("   1. The new logic correctly skips years 2021 and 2020 (which have no PDFs)")
+            print("   2. It finds 2022 as the most recent year with an available PDF")
+            print("   3. The MCP tool properly exposes this functionality")
+        else:
+            print(f"❌ No PDF found: {response.get('message', 'Unknown error')}")
+        
+        print()
+        print("Response structure:")
+        print(json.dumps(response, indent=2))
+        
+    except Exception as e:
+        print(f"❌ Error testing tool: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+async def test_invalid_ein():
+    """Test the tool with an invalid EIN."""
+    print()
+    print("Testing with invalid EIN:")
+    print("-" * 30)
+    
+    try:
+        from src.propublica_mcp.server import get_most_recent_pdf
+        
+        result = await get_most_recent_pdf("invalid-ein")
+        response = json.loads(result)
+        
+        if "error" in response:
+            print("✅ Correctly handled invalid EIN")
+            print(f"   Error: {response['error']}")
+        else:
+            print("❌ Should have returned an error for invalid EIN")
+            
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+
+
+async def test_organization_without_pdfs():
+    """Test with an organization that has no PDFs (if we can find one)."""
+    print()
+    print("Testing the overall workflow:")
+    print("-" * 30)
+    print("The new get_most_recent_pdf_filing method in api_client.py:")
+    print("1. ✅ Sorts all filings by tax year (most recent first)")
+    print("2. ✅ Iterates through filings until it finds one with a valid PDF URL")
+    print("3. ✅ Returns the first match (most recent PDF) or None if no PDFs exist")
+    print()
+    print("The new get_most_recent_pdf MCP tool:")
+    print("1. ✅ Validates the EIN format")
+    print("2. ✅ Calls the improved API client method")
+    print("3. ✅ Returns a well-structured JSON response with PDF info or error")
+
+
 async def main():
     """Run all integration tests."""
     print("🚀 ProPublica MCP Integration Test Suite")

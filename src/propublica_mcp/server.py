@@ -513,6 +513,67 @@ async def search_nonprofits_with_pdfs(
 
 
 @mcp.tool()
+async def get_most_recent_pdf(ein: str) -> str:
+    """
+    Get the most recent Form 990 PDF filing available for a specific organization.
+    
+    This function searches through all filings for an organization, starting with the most 
+    recent year and working backwards until it finds a filing with an available PDF.
+    
+    Args:
+        ein: Employer Identification Number (9 digits, with or without hyphen)
+    
+    Returns:
+        JSON string with the most recent PDF filing info or error message
+    """
+    try:
+        # Clean EIN format
+        clean_ein = ein.replace("-", "").strip()
+        if not clean_ein.isdigit() or len(clean_ein) != 9:
+            return json.dumps({
+                "error": "Invalid EIN format. Must be 9 digits (e.g., '123456789' or '12-3456789')"
+            })
+        
+        # Get the most recent PDF filing
+        pdf_filing = await api_client.get_most_recent_pdf_filing(clean_ein)
+        
+        if pdf_filing is None:
+            return json.dumps({
+                "ein": clean_ein,
+                "has_pdf": False,
+                "message": "No PDF filings found for this organization",
+                "searched_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        response = {
+            "ein": clean_ein,
+            "organization_name": pdf_filing["organization_name"],
+            "has_pdf": True,
+            "most_recent_pdf": {
+                "tax_year": pdf_filing["tax_year"],
+                "form_type": pdf_filing["form_type"],
+                "pdf_url": pdf_filing["pdf_url"],
+                "filing_date": pdf_filing["filing_date"]
+            },
+            "download_instructions": {
+                "method": "GET",
+                "url": pdf_filing["pdf_url"],
+                "note": "This URL will redirect to the actual PDF file on ProPublica's servers"
+            },
+            "retrieved_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return json.dumps(response, indent=2)
+        
+    except Exception as e:
+        logger.error(f"Error getting most recent PDF for {ein}: {e}")
+        return json.dumps({
+            "error": f"Failed to get most recent PDF: {str(e)}",
+            "error_type": type(e).__name__
+        })
+
+
+@mcp.tool()
 async def export_nonprofit_data(
     eins: List[str],
     format: str = "json",

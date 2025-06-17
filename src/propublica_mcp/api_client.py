@@ -470,6 +470,68 @@ class ProPublicaClient:
             logger.error("Failed to get organization summary", ein=ein, error=str(e))
             raise
     
+    async def get_most_recent_pdf_filing(self, ein: str) -> Optional[Dict[str, Any]]:
+        """
+        Get the most recent filing that has a PDF available for an organization.
+        
+        Iterates through all filings in reverse chronological order to find
+        the newest filing with an actual PDF available.
+        
+        Args:
+            ein: Employer Identification Number
+        
+        Returns:
+            Dictionary with filing info and PDF URL if found, None otherwise
+        """
+        # Clean and validate EIN
+        ein_clean = str(ein).replace('-', '').strip()
+        if not ein_clean.isdigit() or len(ein_clean) != 9:
+            raise ProPublicaAPIError(f"Invalid EIN format: {ein}")
+        
+        logger.info("Looking for most recent PDF filing", ein=ein_clean)
+        
+        try:
+            data = await self._make_request(f"/organizations/{ein_clean}.json")
+            
+            if not data.get('filings_with_data'):
+                logger.warning("No filings found", ein=ein_clean)
+                return None
+            
+            # Sort filings by tax year (most recent first)
+            filings = data['filings_with_data']
+            filings_sorted = sorted(
+                filings, 
+                key=lambda f: f.get('tax_prd_yr', 0), 
+                reverse=True
+            )
+            
+            # Iterate through filings to find the most recent one with a PDF
+            for filing in filings_sorted:
+                if self._has_valid_pdf(filing):
+                    pdf_info = {
+                        'tax_year': filing.get('tax_prd_yr'),
+                        'pdf_url': filing.get('pdf_url'),
+                        'form_type': self._convert_form_type(filing.get('formtype', 0)),
+                        'filing_date': filing.get('filing_date'),
+                        'ein': ein_clean,
+                        'organization_name': data.get('organization', [{}])[0].get('name', 'Unknown') if isinstance(data.get('organization'), list) else data.get('organization', {}).get('name', 'Unknown')
+                    }
+                    
+                    logger.info(
+                        "Found most recent PDF filing", 
+                        ein=ein_clean, 
+                        tax_year=pdf_info['tax_year'],
+                        form_type=pdf_info['form_type']
+                    )
+                    return pdf_info
+            
+            logger.info("No PDF filings found", ein=ein_clean)
+            return None
+        
+        except Exception as e:
+            logger.error("Failed to get most recent PDF filing", ein=ein_clean, error=str(e))
+            raise
+    
     async def get_organizations_with_pdfs(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Search for organizations that have PDF filings available.

@@ -8,13 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- N/A
+- New `get_most_recent_pdf` MCP tool that finds the most recent Form 990 PDF filing for an organization
+- New `get_most_recent_pdf_filing` method in API client that iterates through all filings to find the newest PDF
+- One-click deployment buttons for DigitalOcean App Platform and Cloudflare Workers
+- Comprehensive deployment guide (`DEPLOYMENT.md`) for cloud platforms
+- Cloud deployment configurations (`.do/deploy.template.yaml` and `wrangler.toml`)
 
 ### Changed
-- N/A
+- Improved PDF detection logic to iterate through all filings starting from most recent year
+- Updated README with deployment buttons and cloud deployment instructions
 
 ### Fixed
-- N/A
+- PDF availability detection now correctly finds older PDFs when recent years don't have PDFs available
+- Fixed issue where organizations with PDFs available would incorrectly show "no PDFs found"
 
 ## [0.1.5] - 2025-06-16
 
