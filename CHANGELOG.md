@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-## [0.2.1] - 2025-06-17
+## [1.0.0] - 2025-06-17
 
 ### Fixed
 - **Breaking**: Implemented proper Streamable HTTP transport according to MCP 2025-03-26 specification
