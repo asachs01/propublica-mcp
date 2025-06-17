@@ -182,7 +182,7 @@ class TestProPublicaClient:
         """Test successful filing retrieval."""
         # Create mock data with correct field mapping for API parsing
         mock_filing_data = {
-            "filings": [
+            "filings_with_data": [
                 {
                     "ein": "123456789",
                     "tax_prd": 202212,  # This will be converted to tax_year=2022
@@ -219,7 +219,7 @@ class TestProPublicaClient:
 
             # Verify the request was made with correct endpoint
             mock_request.assert_called_once_with(
-                "/organizations/123456789/filings.json"
+                "/organizations/123456789.json"
             )
     
     @pytest.mark.asyncio
