@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A
 
+## [0.1.4] - 2025-06-16
+
+### Fixed
+- Docker test timing issues by implementing retry logic and longer wait periods
+- Package description not appearing in GitHub Container Registry
+- Removed conflicting metadata labels from workflow that overrode Dockerfile labels
+- Enhanced Docker image description with comprehensive details about functionality
+
+### Changed
+- Improved Docker test reliability with proper tag resolution for releases
+- Increased propagation wait time to 30 seconds with retry mechanism
+
 ## [0.1.3] - 2025-06-16
 
 ### Fixed
