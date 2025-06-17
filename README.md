@@ -143,25 +143,17 @@ This server implements the **MCP 2025-03-26 Streamable HTTP** transport protocol
 
 #### For Cloud Deployment (Remote MCP Server):
 **DigitalOcean/Cloudflare (Streamable HTTP):**
-```json
-{
-  "mcpServers": {
-    "propublica-mcp": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-everything", "https://your-deployed-url.com"],
-      "description": "ProPublica Nonprofit Explorer MCP Server (Remote)"
-    }
-  }
-}
-```
 
-**Alternative using uv (if installed):**
+For remote Python MCP servers, you'll need to use an HTTP transport. Add this to your MCP client configuration:
+
 ```json
 {
   "mcpServers": {
     "propublica-mcp": {
-      "command": "uvx",
-      "args": ["mcp", "https://your-deployed-url.com"],
+      "transport": {
+        "type": "http",
+        "url": "https://propublica-mcp-lk97f.ondigitalocean.app"
+      },
       "description": "ProPublica Nonprofit Explorer MCP Server (Remote)"
     }
   }
@@ -209,8 +201,10 @@ Then configure as remote server:
 {
   "mcpServers": {
     "propublica-mcp": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-everything", "http://localhost:8080"],
+      "transport": {
+        "type": "http",
+        "url": "http://localhost:8080"
+      },
       "description": "ProPublica Nonprofit Explorer MCP Server (Local HTTP)"
     }
   }
