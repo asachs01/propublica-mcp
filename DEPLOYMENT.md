@@ -35,7 +35,7 @@ This project uses a **stable release deployment strategy** to ensure only tested
 
 ### DigitalOcean App Platform
 
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/main)
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/deploy)
 
 **Features:**
 - Container-based deployment using Dockerfile

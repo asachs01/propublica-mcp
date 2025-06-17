@@ -16,10 +16,10 @@ A Model Context Protocol (MCP) server that provides access to ProPublica's Nonpr
 Deploy the ProPublica MCP server instantly to your preferred cloud platform:
 
 ### DigitalOcean App Platform
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/main)
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/deploy)
 
 ### Cloudflare Workers
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/asachs01/propublica-mcp)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/asachs01/propublica-mcp/tree/deploy)
 
 Both platforms offer:
 - **DigitalOcean**: Container-based deployment with automatic scaling and monitoring
