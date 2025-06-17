@@ -56,10 +56,6 @@ jobs:
             type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
-            org.opencontainers.image.title=ProPublica MCP Server
-            org.opencontainers.image.description=MCP server for accessing ProPublica Nonprofit Explorer API
-            org.opencontainers.image.vendor=ProPublica MCP
-            org.opencontainers.image.licenses=MIT
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Build and push Docker image
@@ -120,34 +116,65 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Wait for image propagation
+      - name: Wait for image propagation and test availability
         run: |
           echo "Waiting for image to propagate in registry..."
-          sleep 15
+          sleep 30
+          
+          # Test if image is available by trying to pull it with retries
+          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
+          fi
+          
+          echo "Testing image availability: $IMAGE_TAG"
+          for i in {1..5}; do
+            if docker pull $IMAGE_TAG; then
+              echo "Image successfully pulled!"
+              break
+            else
+              echo "Attempt $i failed, waiting 15 seconds..."
+              sleep 15
+            fi
+          done
 
       - name: Test Docker image
         run: |
-          # Pull the image
-          docker pull ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          # Determine the correct image tag
+          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
+          fi
+          
+          echo "Testing image: $IMAGE_TAG"
           
           # Test basic functionality
           docker run --rm \
-            ${{ fromJSON(steps.meta.outputs.json).tags[0] }} \
+            $IMAGE_TAG \
             python -c "from propublica_mcp.server import search_nonprofits; print('Import successful')"
           
           # Test the CLI help
           docker run --rm \
-            ${{ fromJSON(steps.meta.outputs.json).tags[0] }} \
+            $IMAGE_TAG \
             python -m propublica_mcp.server --help
 
       - name: Test with docker-compose
         run: |
+          # Determine the correct image tag for docker-compose
+          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
+          fi
+          
           # Create minimal docker-compose for testing
           cat > docker-compose.test.yml << EOF
           version: '3.8'
           services:
             propublica-mcp:
-              image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+              image: $IMAGE_TAG
               command: python -c "import propublica_mcp.server; print('Docker Compose test successful')"
           EOF
           
