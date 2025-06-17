@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A
 
+## [0.1.3] - 2025-06-16
+
+### Fixed
+- Docker "manifest unknown" error by correcting GitHub repository URL in Dockerfile
+- Repository linking issues by adding `org.opencontainers.image.source` label to workflow metadata
+- Image availability timing issues in GitHub Actions workflow
+- GITHUB_TOKEN permissions for container package publishing
+- Compliance with GitHub Container Registry best practices per official documentation
+
 ## [0.1.2] - 2025-06-16
 
 ### Added
