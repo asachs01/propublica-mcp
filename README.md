@@ -1,5 +1,3 @@
-[![Build](https://github.com/asachs01/propublica-mcp/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/asachs01/propublica-mcp/actions/workflows/docker-publish.yml)
-
 # ProPublica MCP Server
 
 A Model Context Protocol (MCP) server that provides access to ProPublica's Nonprofit Explorer API, enabling AI models to search and analyze nonprofit organizations' Form 990 data for CRM integration and prospect research.
