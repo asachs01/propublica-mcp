@@ -83,5 +83,14 @@ docker-compose.override.yml
 # Scripts
 scripts/
 
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn/
+.pnp.*
+
 # Documentation
 DOCKER.md 

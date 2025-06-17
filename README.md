@@ -11,6 +11,20 @@ A Model Context Protocol (MCP) server that provides access to ProPublica's Nonpr
 - Export data in CRM-ready formats
 - Built with FastMCP for optimal performance
 
+## 🚀 One-Click Deployment
+
+Deploy the ProPublica MCP server instantly to your preferred cloud platform:
+
+### DigitalOcean App Platform
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/main)
+
+### Cloudflare Workers
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/asachs01/propublica-mcp)
+
+Both platforms offer:
+- **DigitalOcean**: Container-based deployment with automatic scaling and monitoring
+- **Cloudflare**: Serverless deployment with global edge distribution and zero cold starts
+
 ## Quick Start
 
 ### Prerequisites
@@ -51,7 +65,21 @@ cp env.example .env
 docker-compose up -d
 ```
 
-#### Option 2: Local Python Installation
+#### Option 2: Cloud Deployment
+
+**DigitalOcean App Platform:**
+1. Click the "Deploy to DO" button above
+2. Connect your GitHub account (if not already connected)
+3. Configure environment variables (optional - defaults are provided)
+4. Click "Deploy" - your app will be live in minutes with a public URL
+
+**Cloudflare Workers:**
+1. Click the "Deploy to Cloudflare Workers" button above
+2. Connect your GitHub account and authorize Cloudflare
+3. Configure any environment variables as needed
+4. Deploy - your serverless function will be live globally
+
+#### Option 3: Local Python Installation
 
 1. Clone the repository:
 ```bash
@@ -81,6 +109,24 @@ python -m propublica_mcp.server
 ```
 
 ### Usage with Claude Desktop
+
+#### For Cloud Deployment:
+**DigitalOcean/Cloudflare (HTTP endpoint):**
+```json
+{
+  "mcpServers": {
+    "propublica-mcp": {
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "-H", "Content-Type: application/json",
+        "https://your-deployed-url.com/mcp"
+      ],
+      "description": "ProPublica Nonprofit Explorer MCP Server (Cloud)"
+    }
+  }
+}
+```
 
 #### For Docker Deployment:
 ```json
