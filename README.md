@@ -16,16 +16,14 @@ A Model Context Protocol (MCP) server that provides access to ProPublica's Nonpr
 Deploy the ProPublica MCP server instantly to your preferred cloud platform:
 
 ### DigitalOcean App Platform
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/v0.2.0)
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/asachs01/propublica-mcp/tree/main)
 
 ### Cloudflare Workers
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/asachs01/propublica-mcp/tree/v0.2.0)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/asachs01/propublica-mcp)
 
 Both platforms offer:
 - **DigitalOcean**: Container-based deployment with automatic scaling and monitoring
 - **Cloudflare**: Serverless deployment with global edge distribution and zero cold starts
-
-> **🔒 Release-Only Deployment**: The deployment buttons above deploy from the latest stable release tag (v0.2.0) rather than the main development branch. This ensures only tested, stable code reaches production. For the latest release version, check the [releases page](https://github.com/asachs01/propublica-mcp/releases).
 
 ## Quick Start
 
@@ -80,6 +78,14 @@ docker-compose up -d
 2. Connect your GitHub account and authorize Cloudflare
 3. Configure any environment variables as needed
 4. Deploy - your serverless function will be live globally
+
+> **🚀 Production Deployment Strategy**
+> 
+> Cloud deployments only deploy from the **`deploy`** branch, which contains stable, tested releases:
+> - **Development**: All work happens on `main` branch
+> - **Releases**: When tags are created (e.g., `v0.2.0`), the `deploy` branch is automatically updated
+> - **Cloud Platforms**: DigitalOcean and Cloudflare deploy only from the `deploy` branch
+> - **Benefits**: Ensures only stable, released versions reach production environments
 
 #### Option 3: Local Python Installation
 

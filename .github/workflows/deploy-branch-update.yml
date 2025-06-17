@@ -1,0 +1,80 @@
+name: Update Deploy Branch
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy (e.g., v0.2.0)'
+        required: true
+        type: string
+
+jobs:
+  update-deploy-branch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Get release tag
+      id: get-tag
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Verify tag exists
+      run: |
+        TAG="${{ steps.get-tag.outputs.tag }}"
+        if ! git tag -l | grep -q "^${TAG}$"; then
+          echo "❌ Tag ${TAG} does not exist"
+          exit 1
+        fi
+        echo "✅ Tag ${TAG} verified"
+
+    - name: Update deploy branch
+      run: |
+        TAG="${{ steps.get-tag.outputs.tag }}"
+        
+        # Checkout the tag
+        git checkout ${TAG}
+        
+        # Force update deploy branch to point to this tag
+        git branch -D deploy 2>/dev/null || true
+        git checkout -b deploy
+        
+        # Push the updated deploy branch
+        git push origin deploy --force
+        
+        echo "✅ Deploy branch updated to ${TAG}"
+
+    - name: Create deployment summary
+      run: |
+        TAG="${{ steps.get-tag.outputs.tag }}"
+        echo "## 🚀 Deploy Branch Updated" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Release**: ${TAG}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch**: \`deploy\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Status**: ✅ Ready for deployment" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Cloud Deployments" >> $GITHUB_STEP_SUMMARY
+        echo "- **DigitalOcean**: Will auto-deploy from \`deploy\` branch" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cloudflare**: Manual deployment from \`deploy\` branch required" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Docker Images" >> $GITHUB_STEP_SUMMARY
+        echo "- \`ghcr.io/asachs01/propublica-mcp:${TAG#v}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- \`ghcr.io/asachs01/propublica-mcp:latest\`" >> $GITHUB_STEP_SUMMARY 
