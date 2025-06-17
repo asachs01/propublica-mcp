@@ -790,7 +790,7 @@ def main():
     
     parser = argparse.ArgumentParser(description="ProPublica Nonprofit Explorer MCP Server")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
-    parser.add_argument("--http", action="store_true", help="Run HTTP/SSE server instead of stdio")
+    parser.add_argument("--http", action="store_true", help="Run HTTP server instead of stdio")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind HTTP server to")
     parser.add_argument("--port", type=int, default=8080, help="Port to bind HTTP server to")
     args = parser.parse_args()
@@ -810,52 +810,263 @@ def main():
     ])
     
     if cloud_deployment:
-        # Run HTTP/SSE server for cloud deployment
-        logger.info("Starting ProPublica MCP server in HTTP/SSE mode")
+        # Run HTTP server for cloud deployment with Streamable HTTP transport
+        logger.info("Starting ProPublica MCP server in Streamable HTTP mode")
         
         # Use PORT environment variable if available (common for cloud platforms)
         port = int(os.getenv("PORT", args.port))
         host = "0.0.0.0" if cloud_deployment else args.host  # Bind to all interfaces in cloud
         
         try:
-            from mcp.server.sse import SseServerTransport
             from starlette.applications import Starlette
             from starlette.routing import Route
-            from starlette.responses import JSONResponse
+            from starlette.responses import JSONResponse, StreamingResponse
+            from starlette.requests import Request
             import uvicorn
+            import uuid
             
-            logger.info(f"HTTP/SSE server will bind to {host}:{port}")
+            logger.info(f"HTTP server will bind to {host}:{port}")
             
-            # Create SSE transport
-            sse = SseServerTransport("/messages")
+            # Store for session management
+            sessions = {}
             
-            async def handle_sse(scope, receive, send):
-                """Handle SSE connections"""
+            async def mcp_endpoint(request: Request):
+                """Single MCP endpoint that handles both GET and POST as per 2025-03-26 spec"""
                 try:
-                    async with sse.connect_sse(scope, receive, send) as streams:
-                        await mcp.run_server(streams[0], streams[1])
+                    # Validate Origin header for security (when present)
+                    origin = request.headers.get("origin")
+                    if origin and origin not in ["https://cursor.sh", "https://localhost", "http://localhost"]:
+                        # For now, we'll allow all origins but log them
+                        logger.warning(f"Request from origin: {origin}")
+                    
+                    if request.method == "POST":
+                        # Handle JSON-RPC messages sent to server
+                        
+                        # Check required Accept header
+                        accept_header = request.headers.get("accept", "")
+                        if "application/json" not in accept_header and "text/event-stream" not in accept_header:
+                            return JSONResponse(
+                                {"error": "Accept header must include application/json and/or text/event-stream"},
+                                status_code=400
+                            )
+                        
+                        # Parse request body
+                        try:
+                            body = await request.body()
+                            if not body:
+                                return JSONResponse({"error": "Empty request body"}, status_code=400)
+                            
+                            json_data = json.loads(body.decode('utf-8'))
+                        except json.JSONDecodeError as e:
+                            return JSONResponse({"error": f"Invalid JSON: {str(e)}"}, status_code=400)
+                        
+                        # Check session ID if required
+                        session_id = request.headers.get("mcp-session-id")
+                        
+                        # Handle the JSON-RPC message through FastMCP
+                        try:
+                            # Handle different types of JSON-RPC messages
+                            if isinstance(json_data, dict):
+                                # Single message
+                                response = await handle_jsonrpc_message(json_data, session_id)
+                            elif isinstance(json_data, list):
+                                # Batch messages
+                                responses = []
+                                for msg in json_data:
+                                    resp = await handle_jsonrpc_message(msg, session_id)
+                                    responses.append(resp)
+                                response = responses
+                            else:
+                                return JSONResponse(
+                                    {"error": "Invalid JSON-RPC format"}, 
+                                    status_code=400
+                                )
+                            
+                            # For initialize requests, optionally set session ID
+                            if (isinstance(json_data, dict) and 
+                                json_data.get("method") == "initialize"):
+                                new_session_id = str(uuid.uuid4())
+                                sessions[new_session_id] = {"created": datetime.now(timezone.utc)}
+                                
+                                headers = {"mcp-session-id": new_session_id}
+                                return JSONResponse(response, headers=headers)
+                            
+                            return JSONResponse(response)
+                            
+                        except Exception as e:
+                            logger.error(f"Error processing MCP message: {e}")
+                            return JSONResponse(
+                                {"error": f"Failed to process message: {str(e)}"}, 
+                                status_code=500
+                            )
+                    
+                    elif request.method == "GET":
+                        # Handle GET requests for SSE streams (optional in spec)
+                        accept_header = request.headers.get("accept", "")
+                        if "text/event-stream" not in accept_header:
+                            return JSONResponse(
+                                {"error": "GET requires Accept: text/event-stream"}, 
+                                status_code=405
+                            )
+                        
+                        # For now, we don't implement GET SSE streams
+                        # This is optional per the spec
+                        return JSONResponse(
+                            {"error": "GET SSE streams not implemented"}, 
+                            status_code=405
+                        )
+                    
+                    else:
+                        return JSONResponse(
+                            {"error": "Method not allowed. Use POST or GET."}, 
+                            status_code=405
+                        )
+                        
                 except Exception as e:
-                    logger.error(f"SSE connection error: {e}")
+                    logger.error(f"Endpoint error: {e}")
+                    return JSONResponse(
+                        {"error": f"Internal server error: {str(e)}"}, 
+                        status_code=500
+                    )
             
-            async def handle_messages(scope, receive, send):
-                """Handle POST messages"""
+            async def handle_jsonrpc_message(message: dict, session_id: Optional[str] = None):
+                """Handle a single JSON-RPC message"""
                 try:
-                    await sse.handle_post_message(scope, receive, send)
+                    method = message.get("method")
+                    params = message.get("params", {})
+                    msg_id = message.get("id")
+                    
+                    # Handle initialize
+                    if method == "initialize":
+                        return {
+                            "jsonrpc": "2.0",
+                            "result": {
+                                "protocolVersion": "2025-03-26",
+                                "capabilities": {
+                                    "tools": {}
+                                },
+                                "serverInfo": {
+                                    "name": "propublica-mcp",
+                                    "version": "1.0.0"
+                                }
+                            },
+                            "id": msg_id
+                        }
+                    
+                    # Handle tools/list
+                    elif method == "tools/list":
+                        try:
+                            # Use FastMCP's built-in list_tools method
+                            tools_list = await mcp.list_tools()
+                            # Convert tool objects to the expected JSON format
+                            tools = []
+                            for tool in tools_list:
+                                tools.append({
+                                    "name": tool.name,
+                                    "description": tool.description,
+                                    "inputSchema": tool.inputSchema
+                                })
+                            
+                            return {
+                                "jsonrpc": "2.0",
+                                "result": {
+                                    "tools": tools
+                                },
+                                "id": msg_id
+                            }
+                        except Exception as e:
+                            logger.error(f"Error listing tools: {e}")
+                            return {
+                                "jsonrpc": "2.0",
+                                "error": {
+                                    "code": -32603,
+                                    "message": f"Failed to list tools: {str(e)}"
+                                },
+                                "id": msg_id
+                            }
+                    
+                    # Handle tools/call
+                    elif method == "tools/call":
+                        tool_name = params.get("name")
+                        arguments = params.get("arguments", {})
+                        
+                        if not tool_name:
+                            return {
+                                "jsonrpc": "2.0",
+                                "error": {
+                                    "code": -32602,
+                                    "message": "Missing tool name"
+                                },
+                                "id": msg_id
+                            }
+                        
+                        # Call the tool using FastMCP
+                        try:
+                            result = await mcp.call_tool(tool_name, arguments)
+                            return {
+                                "jsonrpc": "2.0",
+                                "result": {
+                                    "content": result.content,
+                                    "isError": result.isError if hasattr(result, 'isError') else False
+                                },
+                                "id": msg_id
+                            }
+                        except Exception as e:
+                            logger.error(f"Tool {tool_name} error: {e}")
+                            return {
+                                "jsonrpc": "2.0",
+                                "error": {
+                                    "code": -32603,
+                                    "message": f"Tool execution failed: {str(e)}"
+                                },
+                                "id": msg_id
+                            }
+                    
+                    # Handle notifications (no response needed)
+                    elif msg_id is None:
+                        logger.info(f"Received notification: {method}")
+                        return None
+                    
+                    # Unknown method
+                    else:
+                        return {
+                            "jsonrpc": "2.0",
+                            "error": {
+                                "code": -32601,
+                                "message": f"Method not found: {method}"
+                            },
+                            "id": msg_id
+                        }
+                        
                 except Exception as e:
-                    logger.error(f"Message handling error: {e}")
+                    logger.error(f"Error handling JSON-RPC message: {e}")
+                    return {
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": -32603,
+                            "message": f"Internal error: {str(e)}"
+                        },
+                        "id": message.get("id")
+                    }
             
-            async def health_check(scope, receive, send):
+            async def health_check(request: Request):
                 """Health check endpoint for cloud platforms"""
-                response = JSONResponse({"status": "healthy", "server": "propublica-mcp"})
-                await response(scope, receive, send)
+                try:
+                    return JSONResponse({
+                        "status": "healthy", 
+                        "server": "propublica-mcp",
+                        "version": "2025-03-26",
+                        "transport": "streamable-http"
+                    })
+                except Exception as e:
+                    logger.error(f"Health check error: {e}")
+                    return JSONResponse({"status": "unhealthy", "error": str(e)}, status_code=500)
             
-            # Create Starlette app
+            # Create Starlette app with single MCP endpoint
             app = Starlette(
                 routes=[
-                    Route("/sse", endpoint=handle_sse),
-                    Route("/messages", endpoint=handle_messages, methods=["POST"]),
-                    Route("/health", endpoint=health_check),
-                    Route("/", endpoint=health_check),  # Root health check
+                    Route("/", endpoint=mcp_endpoint, methods=["GET", "POST"]),
+                    Route("/health", endpoint=health_check, methods=["GET"]),
                 ]
             )
             
@@ -863,7 +1074,7 @@ def main():
             uvicorn.run(app, host=host, port=port, log_level=args.log_level.lower())
             
         except ImportError as e:
-            logger.error(f"HTTP/SSE dependencies not available: {e}")
+            logger.error(f"HTTP dependencies not available: {e}")
             logger.error("Please install: pip install starlette uvicorn")
             return 1
         
