@@ -49,17 +49,17 @@ The easiest way to run the ProPublica MCP server is using Docker:
 **Quick Start with Docker:**
 ```bash
 # Pull the latest image from GitHub Container Registry
-docker pull ghcr.io/asachs/propublica-mcp:latest
+docker pull ghcr.io/asachs01/propublica-mcp:latest
 
 # Run the server
-docker run -it --rm ghcr.io/asachs/propublica-mcp:latest
+docker run -it --rm ghcr.io/asachs01/propublica-mcp:latest
 ```
 
 **Using Docker Compose:**
 1. Download the compose file:
 ```bash
-curl -O https://raw.githubusercontent.com/asachs/propublica-mcp/main/docker-compose.yml
-curl -O https://raw.githubusercontent.com/asachs/propublica-mcp/main/env.example
+curl -O https://raw.githubusercontent.com/asachs01/propublica-mcp/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/asachs01/propublica-mcp/main/env.example
 ```
 
 2. Configure environment (optional):
@@ -182,7 +182,7 @@ For remote Python MCP servers, you'll need to use an HTTP transport. Add this to
       "command": "docker",
       "args": [
         "run", "--rm", "-i",
-        "ghcr.io/asachs/propublica-mcp:latest"
+        "ghcr.io/asachs01/propublica-mcp:latest"
       ],
       "description": "ProPublica Nonprofit Explorer MCP Server"
     }
@@ -304,7 +304,7 @@ pytest tests/ -v --cov=src/propublica_mcp
 
 ```bash
 # Run tests in Docker
-docker run --rm ghcr.io/asachs/propublica-mcp:latest \
+docker run --rm ghcr.io/asachs01/propublica-mcp:latest \
   python -m pytest tests/ -v
 
 # Or with docker compose
@@ -352,9 +352,9 @@ Use the provided script (requires local setup):
 
 Once published, the images will be available at:
 
-- **Latest**: `ghcr.io/asachs/propublica-mcp:latest`
-- **Tagged versions**: `ghcr.io/asachs/propublica-mcp:v1.0.0`
-- **Branch builds**: `ghcr.io/asachs/propublica-mcp:main`
+- **Latest**: `ghcr.io/asachs01/propublica-mcp:latest`
+- **Tagged versions**: `ghcr.io/asachs01/propublica-mcp:v1.0.0`
+- **Branch builds**: `ghcr.io/asachs01/propublica-mcp:main`
 
 ### Contributing
 
