@@ -99,7 +99,7 @@ docker-compose up -d
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/asachs01/propublica-mcp.git
 cd propublica-mcp
 ```
 
