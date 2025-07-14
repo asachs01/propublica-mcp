@@ -23,7 +23,6 @@
     "mcp_config": {
       "command": "python3",
       "args": ["${__dirname}/server/main.py"],
-      "cwd": ".",
       "env": {
         "PYTHONPATH": "${__dirname}/server/lib:${__dirname}/server"
       }
