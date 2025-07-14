@@ -5,6 +5,22 @@ This module implements the main MCP server with tools for accessing ProPublica's
 Nonprofit Explorer API data for CRM integration and prospect research.
 """
 
+# Setup vendor path before any imports
+import sys
+import os
+
+# Add vendor directory to Python path - try multiple potential locations
+vendor_paths = [
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../vendor'),  # Current approach
+    os.path.join(os.getcwd(), 'vendor'),  # From current working directory
+    os.path.abspath('vendor'),  # Absolute path from cwd
+]
+
+for vendor_path in vendor_paths:
+    if os.path.exists(vendor_path) and vendor_path not in sys.path:
+        sys.path.insert(0, vendor_path)
+        break
+
 import asyncio
 import logging
 from datetime import datetime, timezone

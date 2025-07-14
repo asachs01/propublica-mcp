@@ -1,0 +1,170 @@
+name: Build and Release DXT Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build DXT package for (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-dxt-package:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get tag name
+        id: get_tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG_NAME=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install DXT toolchain
+        run: npm install -g @anthropic-ai/dxt
+      
+      - name: Validate DXT structure
+        run: |
+          echo "Validating DXT package structure..."
+          
+          # Check required files
+          if [ ! -f "manifest.json" ]; then
+            echo "❌ manifest.json not found"
+            exit 1
+          fi
+          
+          if [ ! -d "server" ]; then
+            echo "❌ server/ directory not found"
+            exit 1
+          fi
+          
+          if [ ! -f "server/main.py" ]; then
+            echo "❌ server/main.py not found"
+            exit 1
+          fi
+          
+          if [ ! -d "server/lib" ]; then
+            echo "❌ server/lib/ directory not found"
+            exit 1
+          fi
+          
+          echo "✅ DXT structure validation passed"
+      
+      - name: Update manifest version
+        run: |
+          # Extract version from git tag
+          TAG_NAME="${{ steps.get_tag.outputs.TAG_NAME }}"
+          VERSION=${TAG_NAME#v}
+          echo "Updating manifest.json version to $VERSION"
+          
+          # Create backup
+          cp manifest.json manifest.json.bak
+          
+          # Update version in manifest.json
+          sed -i.tmp 's/"version": "[^"]*"/"version": "'$VERSION'"/' manifest.json
+          
+          # Verify the change
+          echo "Updated manifest.json version:"
+          grep '"version"' manifest.json
+          
+          # Show diff
+          echo "Changes made:"
+          diff manifest.json.bak manifest.json || true
+      
+      - name: Build DXT package
+        run: |
+          echo "Building DXT package..."
+          dxt pack
+          
+          echo "Contents of current directory after dxt pack:"
+          ls -la
+          
+          echo "Looking for generated .dxt files:"
+          find . -name "*.dxt" -type f -exec ls -la {} \;
+      
+      - name: Find and validate DXT package
+        id: find_dxt_file
+        run: |
+          DXT_FILE=$(find . -name "*.dxt" -type f | head -1)
+          
+          if [ -z "$DXT_FILE" ]; then
+            echo "❌ No .dxt file found after dxt pack"
+            echo "Directory contents:"
+            ls -la
+            exit 1
+          fi
+          
+          echo "Found DXT file: $DXT_FILE"
+          echo "DXT_FILE_PATH=$DXT_FILE" >> $GITHUB_OUTPUT
+          echo "DXT_FILE_NAME=$(basename $DXT_FILE)" >> $GITHUB_OUTPUT
+          
+          # Get file size for verification
+          if command -v stat >/dev/null 2>&1; then
+            FILE_SIZE=$(stat -c%s "$DXT_FILE" 2>/dev/null || stat -f%z "$DXT_FILE")
+            echo "DXT package size: $FILE_SIZE bytes"
+          fi
+          
+          # Test if it's a valid zip file
+          if command -v unzip >/dev/null 2>&1; then
+            if unzip -t "$DXT_FILE" >/dev/null 2>&1; then
+              echo "✅ DXT package is a valid zip archive"
+              
+              # Show package contents
+              echo "Package contents:"
+              unzip -l "$DXT_FILE" | head -10
+            else
+              echo "❌ DXT package is not a valid zip archive"
+              exit 1
+            fi
+          fi
+      
+      - name: Upload DXT package to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+          files: ${{ steps.find_dxt_file.outputs.DXT_FILE_PATH }}
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create summary
+        run: |
+          TAG_NAME="${{ steps.get_tag.outputs.TAG_NAME }}"
+          DXT_FILE_NAME="${{ steps.find_dxt_file.outputs.DXT_FILE_NAME }}"
+          
+          echo "## 📦 DXT Package Built Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag**: $TAG_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "**Package**: \`$DXT_FILE_NAME\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ✅ Uploaded to GitHub Release" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 Installation" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download \`$DXT_FILE_NAME\` from the GitHub release" >> $GITHUB_STEP_SUMMARY
+          echo "2. Open Claude Desktop" >> $GITHUB_STEP_SUMMARY
+          echo "3. Go to Settings → Extensions" >> $GITHUB_STEP_SUMMARY
+          echo "4. Click \"Install Extension\" and select the .dxt file" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Package Contents" >> $GITHUB_STEP_SUMMARY
+          echo "- ProPublica MCP Server with bundled dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "- 8 powerful tools for nonprofit research and analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- Compatible with Claude Desktop and other MCP clients" >> $GITHUB_STEP_SUMMARY

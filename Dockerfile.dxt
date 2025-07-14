@@ -1,0 +1,38 @@
+FROM python:3.11-slim
+
+# Metadata
+LABEL org.opencontainers.image.title="ProPublica MCP Server (DXT Extension)" \
+      org.opencontainers.image.description="MCP server providing access to ProPublica Nonprofit Explorer API for Form 990 data - DXT Extension format" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.source="https://github.com/asachs01/propublica-mcp"
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH="/app/server/lib:/app/server"
+
+# Install system dependencies (minimal for DXT)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up app directory
+WORKDIR /app
+
+# Copy DXT structure (no requirements.txt needed - deps are bundled)
+COPY server/ ./server/
+COPY manifest.json ./
+
+# Create non-root user for security
+RUN groupadd -r mcpuser && useradd -r -g mcpuser mcpuser
+RUN chown -R mcpuser:mcpuser /app
+USER mcpuser
+
+# Expose port (for HTTP mode)
+EXPOSE 8000
+
+# Healthcheck (updated for DXT structure)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python server/main.py --help > /dev/null || exit 1
+
+# Default command - use DXT entry point
+CMD ["python", "server/main.py"]

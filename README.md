@@ -37,14 +37,35 @@ Both platforms offer:
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- Git
+- Compatible MCP client (Claude Desktop, Cursor, etc.)
+- For development: Python 3.8 or higher, Git
 
 ### Installation
 
-#### Option 1: Docker (Recommended)
+#### Option 1: DXT Extension (Recommended)
 
-The easiest way to run the ProPublica MCP server is using Docker:
+The easiest way to install the ProPublica MCP server is using the DXT extension format:
+
+**Install from GitHub Releases:**
+1. Go to the [releases page](https://github.com/asachs01/propublica-mcp/releases)
+2. Download the latest `propublica-mcp-[version].dxt` file
+3. Install the DXT extension:
+
+**For Claude Desktop:**
+```bash
+# Install from downloaded file
+claude-desktop install propublica-mcp-[version].dxt
+
+# Or install directly from GitHub release
+claude-desktop install https://github.com/asachs01/propublica-mcp/releases/latest/download/propublica-mcp.dxt
+```
+
+**For other MCP clients:**
+Follow your client's DXT installation instructions or extract the DXT file to your MCP extensions directory.
+
+#### Option 2: Docker (Production)
+
+For production deployments or containerized environments:
 
 **Quick Start with Docker:**
 ```bash
@@ -73,7 +94,7 @@ cp env.example .env
 docker-compose up -d
 ```
 
-#### Option 2: Cloud Deployment
+#### Option 3: Cloud Deployment
 
 **DigitalOcean App Platform:**
 1. Click the "Deploy to DO" button above
@@ -95,7 +116,9 @@ docker-compose up -d
 > - **Cloud Platforms**: DigitalOcean and Cloudflare deploy only from the `deploy` branch
 > - **Benefits**: Ensures only stable, released versions reach production environments
 
-#### Option 3: Local Python Installation
+#### Option 4: Local Python Installation (Development)
+
+For development and customization:
 
 1. Clone the repository:
 ```bash
@@ -140,6 +163,22 @@ python -m propublica_mcp.server --http --host 0.0.0.0 --port 8080
 ### Usage with MCP Clients
 
 This server implements the **MCP 2025-03-26 Streamable HTTP** transport protocol and can be used with any MCP client, including Claude Desktop, Cursor, and other compatible tools.
+
+#### For DXT Extension (Recommended):
+
+Once installed as a DXT extension, the server will be automatically configured. Most MCP clients will detect and load the extension automatically.
+
+**Manual DXT Configuration (if needed):**
+```json
+{
+  "mcpServers": {
+    "propublica-mcp": {
+      "extension": "propublica-mcp.dxt",
+      "description": "ProPublica Nonprofit Explorer MCP Server (DXT Extension)"
+    }
+  }
+}
+```
 
 #### For Cloud Deployment (Remote MCP Server):
 **DigitalOcean/Cloudflare (Streamable HTTP):**
@@ -240,23 +279,32 @@ This server uses the [ProPublica Nonprofit Explorer API](https://projects.propub
 
 ```
 propublica-mcp/
-├── src/
+├── server/                    # DXT extension structure
+│   ├── src/
+│   │   └── propublica_mcp/
+│   │       ├── __init__.py
+│   │       ├── server.py
+│   │       ├── api_client.py
+│   │       ├── models.py
+│   │       └── tools/
+│   ├── requirements.txt
+│   └── manifest.json         # DXT extension manifest
+├── src/                      # Legacy source structure (for compatibility)
 │   └── propublica_mcp/
-│       ├── __init__.py
-│       ├── server.py
-│       ├── api_client.py
-│       ├── models.py
-│       └── tools/
 ├── tests/
 ├── config/
 ├── .github/
 │   └── workflows/
+│       └── build-dxt.yml     # Automated DXT packaging
 ├── Dockerfile
 ├── docker-compose.yml
 ├── env.example
 ├── requirements.txt
+├── manifest.json             # Root DXT manifest
 └── README.md
 ```
+
+The project now supports both the traditional Python package structure and the new DXT extension format. The `server/` directory contains the DXT-compatible structure that gets packaged into `.dxt` files during releases.
 
 ### Development with Docker
 
@@ -311,6 +359,35 @@ docker run --rm ghcr.io/asachs01/propublica-mcp:latest \
 docker compose run --rm propublica-mcp pytest tests/ -v
 ```
 
+### Building DXT Extensions
+
+The project includes automated DXT packaging via GitHub Actions. DXT files are automatically built and attached to releases.
+
+#### Automated DXT Building (Recommended)
+
+Create a tag to trigger automated DXT packaging:
+
+```bash
+# Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This will:
+1. Package the `server/` directory into a `.dxt` file
+2. Create a GitHub release with the DXT file attached
+3. Build and publish Docker images to GitHub Container Registry
+
+#### Manual DXT Building
+
+For development or testing:
+
+```bash
+# Create DXT package manually
+cd server/
+zip -r ../propublica-mcp-dev.dxt .
+```
+
 ### Publishing to GitHub Container Registry
 
 The project includes automated publishing via GitHub Actions, but you can also publish manually:
@@ -331,7 +408,7 @@ Push to the `main` branch or create a tag to trigger automated builds:
 # Trigger build for main branch
 git push origin main
 
-# Create and push a version tag
+# Create and push a version tag (also builds DXT)
 git tag v1.0.0
 git push origin v1.0.0
 ```
@@ -348,10 +425,16 @@ Use the provided script (requires local setup):
 ./scripts/docker-publish.sh v1.0.0
 ```
 
-#### Available Images
+#### Available Packages
 
-Once published, the images will be available at:
+Once published, the following packages will be available:
 
+**DXT Extensions:**
+- **Latest**: Available from [GitHub releases](https://github.com/asachs01/propublica-mcp/releases/latest)
+- **Tagged versions**: `propublica-mcp-v1.0.0.dxt`
+- **Direct download**: `https://github.com/asachs01/propublica-mcp/releases/latest/download/propublica-mcp.dxt`
+
+**Docker Images:**
 - **Latest**: `ghcr.io/asachs01/propublica-mcp:latest`
 - **Tagged versions**: `ghcr.io/asachs01/propublica-mcp:v1.0.0`
 - **Branch builds**: `ghcr.io/asachs01/propublica-mcp:main`

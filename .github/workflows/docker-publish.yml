@@ -238,4 +238,18 @@ jobs:
           name: "v${{ steps.extract_version.outputs.VERSION }}: ProPublica MCP Server"
           body_path: release-notes.md
           draft: false
-          prerelease: false 
+          prerelease: false
+
+      - name: Trigger DXT Package Build
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'dxt-release.yml',
+              ref: 'main',
+              inputs: {
+                tag: 'v${{ steps.extract_version.outputs.VERSION }}'
+              }
+            }); 
