@@ -1,0 +1,52 @@
+{
+  "dxt_version": "0.1",
+  "name": "propublica-mcp",
+  "display_name": "ProPublica MCP Extension",
+  "version": "0.1.0",
+  "description": "A Model Context Protocol (MCP) server that provides access to ProPublica's Nonprofit Explorer API, enabling AI models to search and analyze nonprofit organizations' Form 990 data for CRM integration and prospect research.",
+  "long_description": "This extension implements a full-featured MCP server for ProPublica's Nonprofit Explorer API. It allows AI models and automation tools to search for nonprofit organizations by name, location, and category; retrieve detailed organization profiles and contact information; access Form 990 financial data and filing history; analyze financial trends across multiple years; and export data in CRM-ready formats.\nBuilt with FastMCP for optimal performance, it supports both local and remote (HTTP) deployments, and is compatible with Claude Desktop, Cursor, and other MCP clients.\nUse cases include CRM enrichment, prospect research, and nonprofit analytics.\nSee the [README](https://github.com/asachs01/propublica-mcp) for full details.",
+  "author": {
+    "name": "Aaron Sachs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asachs01/propublica-mcp"
+  },
+  "homepage": "https://github.com/asachs01/propublica-mcp",
+  "documentation": "https://github.com/asachs01/propublica-mcp",
+  "support": "https://github.com/asachs01/propublica-mcp/issues",
+  "icon": "",
+  "screenshots": [],
+  "server": {
+    "type": "python",
+    "entry_point": "server/main.py",
+    "mcp_config": {
+      "command": "python3",
+      "args": ["${__dirname}/server/main.py"],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "${__dirname}/server/lib:${__dirname}/server"
+      }
+    }
+  },
+  "tools": [
+    {"name": "search_nonprofits", "description": "Search for nonprofit organizations using ProPublica's database."},
+    {"name": "get_organization", "description": "Get detailed information about a specific nonprofit organization."},
+    {"name": "get_organization_filings", "description": "Get Form 990 filings for a specific nonprofit organization."},
+    {"name": "analyze_nonprofit_financials", "description": "Analyze financial trends and key metrics for a nonprofit organization."},
+    {"name": "search_similar_nonprofits", "description": "Find nonprofits similar to a given organization based on various criteria."},
+    {"name": "search_nonprofits_with_pdfs", "description": "Search for nonprofit organizations that have PDF Form 990 filings available."},
+    {"name": "get_most_recent_pdf", "description": "Get the most recent Form 990 PDF filing available for a specific organization."},
+    {"name": "export_nonprofit_data", "description": "Export comprehensive data for multiple nonprofit organizations in various formats."}
+  ],
+  "prompts": [],
+  "tools_generated": true,
+  "keywords": ["api", "automation", "productivity", "propublica", "mcp", "nonprofit", "form990"],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "python": ">=3.8"
+    }
+  }
+} 

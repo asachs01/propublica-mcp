@@ -38,6 +38,10 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Vendored dependencies
+vendor/
+
+
 # Environments
 .env
 .venv
@@ -93,4 +97,6 @@ yarn-error.log*
 .pnp.*
 
 # Documentation
-DOCKER.md 
+DOCKER.md
+docs/ 
+.hive-mind

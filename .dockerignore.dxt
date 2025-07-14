@@ -1,0 +1,69 @@
+# DXT-specific .dockerignore
+# Exclude everything except DXT structure
+
+# Keep these for DXT
+!server/
+!manifest.json
+
+# Exclude old structure
+src/
+tests/
+docs/
+plans/
+prompt_logs/
+vendor/
+
+# Development files
+.git
+.gitignore
+.github/
+.vscode/
+.idea/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.tox/
+.coverage
+.pytest_cache/
+.mypy_cache/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation and planning
+README.md
+DEPLOYMENT.md
+DOCKER.md
+CHANGELOG.md
+LICENSE
+*.md
+
+# Config examples
+env.example
+config/
+logs/
+
+# Old Docker files
+Dockerfile
+docker-compose.yml
+Dockerfile-multistage
+
+# Scripts
+scripts/
+wrangler.toml
+package.json
+requirements.txt
+pyproject.toml
