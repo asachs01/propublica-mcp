@@ -38,6 +38,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: false
       
       - name: Install DXT toolchain
         run: npm install -g @anthropic-ai/dxt
