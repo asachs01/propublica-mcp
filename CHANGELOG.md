@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [1.1.0] - 2025-07-14
+
+### Added
+- **DXT Extension Support**: Complete restructuring to support Anthropic DXT (Desktop Extensions) packaging format
+- DXT-compliant directory structure with `server/` containing bundled dependencies and entry point
+- New `server/main.py` entry point following official DXT conventions
+- Automated DXT package building via GitHub Actions workflow (`.github/workflows/dxt-release.yml`)
+- Bundled dependencies in `server/lib/` directory for self-contained extension deployment
+- Updated `manifest.json` with proper DXT configuration and PYTHONPATH setup
+- DXT installation instructions as primary recommended installation method in README
+- Automated release workflow that builds both Docker images and DXT packages
+- DXT package validation and testing scripts
+
+### Changed
+- **Project Structure**: Restructured from `src/` layout to DXT-compliant `server/` layout
+- **Installation Priority**: DXT extension is now the primary recommended installation method
+- **README.md**: Completely reorganized to prioritize DXT installation while preserving all existing content
+- **Dependency Management**: Moved from runtime dependency installation to bundled dependencies approach
+- **Entry Point**: Changed from `python -m propublica_mcp.server` to `python server/main.py`
+- **PYTHONPATH Configuration**: Updated to use `${__dirname}/server/lib:${__dirname}/server` for DXT compatibility
+
+### Fixed
+- Module resolution issues when running as DXT extension by implementing proper sys.path setup
+- Virtual environment compatibility by bundling all dependencies in extension package
+- Runtime dependency conflicts by using vendored dependencies approach
+
+### Technical Details
+- Maintains full backward compatibility with existing Docker and Python installation methods
+- Supports hybrid deployment strategy (DXT for local, Docker for production)
+- Automatic GitHub release creation with both Docker images and DXT packages
+- Enhanced CI/CD pipeline for multi-format package distribution
+
 ## [1.0.0] - 2025-06-17
 
 ### Changed
